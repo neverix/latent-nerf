@@ -17,14 +17,6 @@ class StableDiffusion(nn.Module):
     def __init__(self, device, model_name='CompVis/stable-diffusion-v1-4',concept_name=None, latent_mode=True):
         super().__init__()
 
-        try:
-            with open('./TOKEN', 'r') as f:
-                self.token = f.read().replace('\n', '') # remove the last \n!
-                logger.info(f'loaded hugging face access token from ./TOKEN!')
-        except FileNotFoundError as e:
-            self.token = True
-            logger.warning(f'try to load hugging face access token from the default place, make sure you have run `huggingface-cli login`.')
-
         self.device = device
         self.latent_mode = latent_mode
         self.num_train_timesteps = 1000
@@ -34,7 +26,7 @@ class StableDiffusion(nn.Module):
         logger.info(f'loading stable diffusion with {model_name}...')
                 
         # 1. Load the autoencoder model which will be used to decode the latents into image space. 
-        self.vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae", use_auth_token=self.token).to(self.device)
+        self.vae = AutoencoderKL.from_pretrained(model_name, subfolder="vae").to(self.device)
 
         # 2. Load the tokenizer and text encoder to tokenize and encode the text. 
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
@@ -44,7 +36,7 @@ class StableDiffusion(nn.Module):
 
 
         # 3. The UNet model for generating the latents.
-        self.unet = UNet2DConditionModel.from_pretrained(model_name, subfolder="unet", use_auth_token=self.token).to(self.device)
+        self.unet = UNet2DConditionModel.from_pretrained(model_name, subfolder="unet").to(self.device)
 
         # 4. Create a scheduler for inference
         self.scheduler = PNDMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", num_train_timesteps=self.num_train_timesteps)
